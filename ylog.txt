@@ -1,0 +1,13 @@
+Settings loaded
+Log4J + Java3d    : 0s 593ms
+Plugins           : 0s 67ms
+Pre-GUI Total Time: 0s 660ms
+View2D creation    : 0s 137ms
+View3D creation    : 0s 531ms
+ToolPane creation  : 0s 170ms
+TypeRegistry.get_number_of_entries = 2
+MenuBar creation   : 0s 618ms
+StatusBar creation : 0s 0ms
+MainWindow creation: 0s 507ms
+Create Interface Total Time: 1s 993ms
+Stereo: false

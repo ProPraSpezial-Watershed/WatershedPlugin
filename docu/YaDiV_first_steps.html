@@ -1,0 +1,603 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="de">
+  <head>
+    <title>YaDiV - First Steps</title>
+    <meta http-equiv="Content-Type"       content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Language"   content="en">
+  </head>
+  
+  <body style="width:800px;">
+    <h1>YaDiV - First Steps</h1>
+    
+    <p>
+    This document is written as a short introduction to
+    <a href="http://www.welfenlab.de/en/research/fields_of_research/yadiv/">YaDiV</a>.
+    It makes no
+    assumptions if the reader belongs to a computer orientated community
+    (3D programmer, visualizing expert) or has a more medical background.
+    Its intention is to give the reader a first overview and make the
+    first steps a little more easy. It is by no means a complete manual.
+    </p>
+     
+    <p><font color="red">
+    The program is an experimental software system. It is not a validated 
+    safety-conscious medical product. Any use in the medical field requires
+    proper medical supervision.
+    </font></p>
+    
+    <h2>System Requirements</h2>
+    <p>
+    Any operating system with support for Java (JRE 1.6.0) and Java3D (1.5.2),
+    256 MB Video Ram, 1 GB Main Memory, Screen Resolution 1280 x 1024 or higher.
+    More RAM definitely helps. A graphic card that supports 3D textures is
+    recommended. <a href="http://java.com/de/download/manual.jsp">Java</a>
+    and <a href="https://java3d.dev.java.net/">Java3D</a> must be installed
+    on the system already, they are not included in this package.
+    </p>
+
+    <h2>Main Window</h2>
+    
+    <p>
+    <img src="gfx/Screenshot_YaDiV_main_with_data.png" alt="" title="" >
+    </p>
+    
+    <h2>Open a DICOM Series</h2>
+    <p>
+    When YaDiV is started, most GUI elements will be disabled. This will
+    change after a DICOM series is loaded. At the moment, YaDiV supports
+    DICOM files with the Photometric Interpretation MONOCHROME2. 
+    If you do not have any DICOM files yet, there are some resources in the
+    internet, for example the <a href="http://education.siggraph.org/resources/cgsource/instructional-materials/volume-visualization-data-sets/cthead.zip/view">CT-Cadaver Head</a> or <a href="http://pubimage.hcuge.ch:8080">this site</a>.
+    </p>
+    
+    <p>
+    To open a series of DICOM files, select <b>"File &rarr; Open"</b> from
+    the main menu. In the
+    upcomming dialog, open the directory containing the DICOM files and select
+    a single file. YaDiV will automatically open all files in the same
+    directory belonging to the series of the selected file. Series with
+    files stored in
+    more than one directoriy are (currently!) not supported.
+    While the series is loading, you can already browse through the DICOM files
+    which have been loaded so far using the <b>Image Selector</b>.
+    </p>
+    
+    <table>
+      <tr valign="top">
+        <td><img src="gfx/Screenshot_YaDiV_menu_file.png" alt="" title="" ></td>
+        <td>
+          <img src="gfx/Screenshot_YaDiV_open_file_dialog.png" alt="" title="">
+        </td>
+      </tr>
+    </table>
+        
+    <p>
+    After loading has finished, the <b>Info Tab</b> of the tool pane
+    displays some short summary of the loaded data, including a voxel data
+    histogram.
+    </p>
+
+    <h2>Visualize the Data</h2>
+
+    <p>
+    The main window of YaDiV shows two elements to explore and analyse the
+    loaded data: the "View 2d" and the "View 3d". Both will display 
+    the raw (volume) data as well as segments and other meta info. The
+    volume data rendering is influenced by the selected Region of Interest
+    (ROI), which can be set at the "Misc" panel in the tool pane below.
+    </p>
+    
+    <h3>2D Visualization</h3>
+    <p>
+    After a DICOM Series has been loaded, the "View 2d" will automatically
+    show the selected data. Use the <b>Image Selector</b> to select a slice
+    of interest.
+    </p>
+    
+    <h4>View Modes</h4>
+    <p>
+    The "View 2d" can show slice images in transversal (default), saggital
+    or frontal mode. Switch between the different modes using the "2d View"
+    menu or with the buttons in the "View 2d" title bar.
+    </p>
+    
+    <p>
+    <img src="gfx/Screenshot_YaDiV_view_mode_buttons.png" alt="" title="" >
+    </p>
+    
+    <h4>Zoom</h4>
+    
+    <table>
+      <tr valign="top">
+      <td>
+      <img src="gfx/Screenshot_YaDiV_panning.png" align="left" alt="" title="" >
+      </td>
+      <td>
+      To zoom into a specific region, move your mouse cursor
+      over the center of your interest and use the mouse wheel to interactively
+      zoom in and out. Use the right mouse button
+      to move the magnified region ("panning"). During panning, an overview will
+      blend in to show your current location in the whole picture. Alternatively
+      you can enter a specific zoom factor in the element in the "View 2d" title
+      bar.
+    
+      <p>
+      <b>Experts Tip:</b> Use the Viewport2d "scaling quality" in the Settings
+      window to enhance zooming quality! This might reduce the rendering speed
+      drastically if the graphic card does not support bilinear/bicubic
+      filtering.
+      </p>
+      </td>
+      </tr>
+    </table>
+        
+    <h3>3D Visualization</h3>
+    
+    <p>
+    After a series has been loaded, the "View 3d" can be used to explore
+    the data.
+    </p>
+    
+    <h3>Slice Plane and Ortho Slice Mode</h3>
+
+    <p>
+    <img src="gfx/Screenshot_YaDiV_view3d_title_bar_1.png" alt="" title="" >
+    </p>
+
+    <p>
+    A first and simple visualization tool is the
+    <b>Slice Plane Mode</b>. It can be activated either via the "3d View"
+    main menu or the button in the "View 3d" title bar.
+    When activated, the "View 3d" will render the plane of the image selected
+    in the "View 2d" at the correct 3D-Position.
+    </p>
+
+    <p>
+    <img src="gfx/Screenshot_YaDiV_slice_plane.png" alt="" title="" >
+    </p>
+    
+    <p>    
+    The <b>Ortho Slice Mode</b>
+    will looks similiar, but also show the last selected slices in transversal,
+    saggittal and frontal mode. 
+    </p>
+   
+    <p>
+    <img src="gfx/Screenshot_YaDiV_ortho_slice.png" alt="" title="" >
+    </p>
+
+    <h3>Volume Data Visualization</h3>
+
+    <p>
+    <img src="gfx/Screenshot_YaDiV_view3d_title_bar_2.png" alt="" title="" >
+    </p>
+
+    <p>
+    An enhanced 3D visualzation feature is the <b>2D-Texture Visualization</b>.
+    It basically renders several slices in transversal, sagittal and frontal
+    projection with a low transparency value, allowing a fast and 3 dimensional
+    analysis of the loaded data set. It can be enabled using the "3d View"
+    main menu or the button in the "View 3d" title bar.
+    </p>
+    
+    <p>
+    The quality of the 2D-Texture Visualization strongly depends on the number
+    of planes which are rendered. This can be choosen in the "View 3d" tab
+    of the main tool pane. Select "1" for the best results - and the highest
+    main memory consumtion.
+    The overall transparency allows to look "through"
+    the data to analyse internal structures and it is possible to choose
+    between a "grey scale" and "pseudo color" colortable.
+    </p>
+
+    <table>
+      <tr>
+        <td><img src="gfx/Screenshot_YaDiV_tex2d.png" alt="" title="" ></td>
+        <td><img src="gfx/Screenshot_YaDiV_tex3d.png" alt="" title="" ></td>
+      </tr>
+      <tr>
+        <td align="center">
+          <font size="2">Volume Data using 2D Texture</font>
+        </td>
+        <td align="center">
+          <font size="2">Volume Data using 3D Texture</font>
+        </td>
+      </tr>
+    </table>
+        
+    <p>
+    The <b>3D-Texture Visualization</b> is very similiar to the
+    2D-Texture Visualization, but usually with a usually improved
+    rendering quality. Since not all graphic cards support 3D-textures (yet),
+    both visualization features have been implemented. If the "View 3d"
+    shows only a "white box" instead of the loaded data, your graphic card
+    does not support 3D-Textures. 
+    </p>
+     
+    <p>
+    <b>Experts Tip:</b> The ROI-Selection (in the "Misc" panel in the tool
+    pane) has an immidiate influence on the 2d/3d texture visualization.
+    </p>
+
+    <h2>Segmenting</h2>
+    
+    <p>
+    Segments are used to identify certain structures in the loaded data
+    series, such a bones, a muscle or an organ. They can be visualized in the
+    "View 2d" and "View 3d" panels. From the computer science point of view
+    a segment is a structure, assigning a "belongs to me" or "does not belong
+    to me" label to each voxel in the loaded data. 
+    </p>
+    
+    <p>
+    To create a segment different
+    segmentation methods can be used and even combined. 
+    The second tab in the tool pane (labeled "Segs") contains the tools to
+    create, delete and manage segments.
+    </p>
+    
+    <p>
+    <img src="gfx/Screenshot_YaDiV_tool_pane_segs.png" alt="" title="" >
+    </p>
+
+    <h3>Segment Manger</h3>
+    
+    <p>
+    Complex structures such as the human brain can usually be not
+    segmented with a single segmentation method, YaDiV uses a managed
+    segmentation concept: Each segmentation method selects voxel in a
+    "temporary segment", which can be added to (or removed from) a "real"
+    segment. This way it is possible to combine several segmentation methods.    
+    </p>
+    
+    <p>
+    The temporary selection is always drawn in red. For example, if you have
+    a blue segment wich overlaps with the current selection, the overlapping
+    region will be drawn in purple since red + blue = purple. To make things
+    easier to see, a simple geometric shaped blue segment is used (sphere) and
+    the temorary segment/selection is shaped like a small red box.
+    </p>
+    
+    <table>
+      <tr>
+        <td><img src="gfx/Screenshot_YaDiV_seg_ex1_crop.png" alt="" title="" ></td>
+      </tr><tr>
+        <td align="center">
+          <font size="2">Selection (red) and segment (blue)</font>
+        </td>
+      </tr>
+    </table>
+
+    <p>
+    The segment manager consists of three main elements. The first is the
+    <b>segment list</b>   
+    containing one or more segment(s). This list is empty at the beginning.
+    Below the list element is a row of five buttons.
+    </p>
+    
+    <p>
+    <img src="gfx/Screenshot_YaDiV_new_load_save.png" align="right" alt="" title="" >
+    </p>
+    
+    <ul>
+      <li>
+        <b>New</b>: Creates a new (empty) segment and adds it to the list.
+      </li>  
+      <li>
+        <b>Load</b>: Loads a previousely created segment.
+      </li>  
+      <li>
+        <b>Save</b>: Saves the <i>selected</i> segment to a file.
+      </li>  
+      <li>
+        <b>Edit</b>: Allows to change name or color of the <i>selected</i>
+        segment.
+      </li>  
+      <li>
+        <b>Delete</b>: Deletes a segment from the list.
+      </li>  
+    </ul>
+    
+    <p>
+    <img src="gfx/Screenshot_YaDiV_add_del_copy.png" align="right" alt="" title="" >
+    </p>
+
+     <p>
+     To the right side of the segment list is a column of four buttons:
+    </p>
+   
+    <ul>
+      <li>
+        <b>Add</b>: Add every voxel in the temporary segment to the
+        selected segment (logical or).
+      </li>  
+      <li>
+        <b>Remove</b>: Remove every voxel in the temporary segment from
+        the selected segment (logical and not).
+      </li>  
+      <li>
+        <b>Copy Left</b>: Replaces the selected segment with the temporary.
+      </li>  
+      <li>
+        <b>Copy Right</b>: Replaces the temporary segment with the selected.
+      </li>  
+    </ul>
+    
+    <p>
+    Again the example with a blue segment. If the current selection overlaps
+    with the (red)) temporary selection, the overlapping regions are drawn
+    in purple. If the selection is added to the
+    segment, all red voxels turn purple because they now belong
+    to the segment and the selection at the same time. If add, remove, copy left
+    or copy right are pressed when no segment is selected in the list, nothing
+    happens.
+    </p>
+    
+    <table>
+      <tr>
+        <td><img src="gfx/Screenshot_YaDiV_seg_ex1_plus_crop.png" alt="" title="" ></td>
+      </tr><tr>
+        <td align="center">
+          <font size="2">Selection (red) was added to blue segment
+          </font>
+        </td>
+      </tr>
+    </table>
+
+    <p>
+    If the selection is "removed" from the
+    segment, all violet voxels turn red. After removing the selection, they
+    do not belong to the blue segment anymore but are still in the selection.
+    </p>
+ 
+    <table>
+      <tr>
+        <td><img src="gfx/Screenshot_YaDiV_seg_ex1_minus_crop.png" alt="" title="" ></td>
+      </tr><tr>
+        <td align="center">
+          <font size="2">Selection (red) was removed to from segment</font>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Segmentation Methods</h3>
+    
+    <h4>Range</h4>
+    <p>
+    Range based segmenting is a very simple but often used segmentation method.
+    With a given minimum and maximum value, it segments all voxels with values
+    in that range. In YaDiV you can use the sliders to define min and max
+    or enter the value directly in the textfield.
+    </p>
+    
+    <h4>Region Grow</h4>
+    <p>
+    Region Grow segmentation requires two start values: a seed and a variance.
+    The seed is a voxel located in the object that should be segmented, the
+    variance defines how much neighboured voxels may differ from the seed
+    value. Use the left mouse button in the View 2d to select the seed
+    and the slider to select the variance. It is also possible to start the
+    region grow with several seeds (use ctrl + left mouse button in the
+    View 2d to select more than one).
+    </p>
+    
+    <h4>Snake &amp; Energy Snake</h4> 
+    <p>
+    Snake &amp; Energy Snake belong to the active contour segmentation methods.
+    They are pretty mathematical and we are still working on a more userfriendly
+    tool dialog.
+    </p>
+    
+    <h4>Free Draw</h4>
+    <p>
+    The manual segmentation tool allows to "draw" or "erase" data similiar to a
+    2D paint program. While this would usualy take to long for large or complex
+    structures, it can be used to correct a first approach (for example made
+    with region grow) or be a rough start segment for snake/snake energy
+    segmentation.
+    
+    Choose a brush size of your choice and select the "paint" cursor to select
+    voxels in the "View 2d". They will be selected in the temporary segment,
+    as every other segmentation tool does as well - so they need to be "added"
+    to a real segment when you are finished. The adjustable variance can be
+    used to assist the manual segmentation: when enabled, the intensity value
+    of the first voxel (when the left mouse button is pressed down) is used
+    to define a range of selectable voxels. The higher the variance, the larger
+    the range.
+    </p>
+    
+    <h4>Simple Geometry</h4>
+    <p>
+    The "Simple Geo" segementation tools allow to create segments shaped
+    like simple geometric figures: box, sphere and torus. They are mainly
+    usefull for segment visualization testing during the developement
+    of new visualization techniques.
+    </p>
+    
+    <h4>Misc</h4>
+    <p>
+    Contains currently only tools to shrink, grow or invert the selection
+    (temporary segment).
+    </p>
+    
+    <h4>Bounding Box</h4>
+    <p>
+    When enabled, the bounding box restricts all segmentation tools the
+    given limits. Select a seed
+    point with the left mouse button, then adjust x-, y- and z-size until
+    the box fits your needs. Alternatively select several seeds (holding
+    down CTRL while clicking allows the selection of more then one seed) and
+    press "Use Seeds". The bounding box will be adjusted so that all selected
+    seeds will fit inside.
+    </p>
+
+    <h2>Segment Visualization</h2>
+
+    <p>
+    When writing this small tutorial, the usual chicken/egg problem occured.
+    To visualize a segment, you need to create a segment first. While creating
+    the segment, you need to visualize to see what you are doing. After
+    you learned how to create a segment (and got an intuitive idea how segments
+    are visualized in 2d), we will look into segment visualization a bit closer.
+    </p>
+
+    <h3>2D Segment Visualization</h3>    
+    
+    <p>
+    When a new segment is created, it will automatically shown in the "View 2d".
+    Each segment can be shown or hidden using the "2d View" main menu. The
+    voxels belonging to a segment are drawn in the segment color with a low
+    transparency, so that it is still possible to see what is beneath the
+    segment. If a voxel belongs to several segments, the segment colors
+    are mixed.
+    </p>
+    
+    <h3>3D Segment Visualization</h3>
+    
+    <p>
+    Since 3D segment rendering takes more time than 2d (strongly depending
+    on your graphic card), the 3d visualization of a new segment is per default.
+    Each segment can be shown or hidden using the "3d View" main menu or
+    via the "View 3d" tool in the tool pane.
+    </p>
+    
+    <table>
+      <tr>
+        <td><img src="gfx/Screenshot_YaDiV_seg_vis_points.png" alt="" title="" ></td>
+        <td><img src="gfx/Screenshot_YaDiV_seg_vis_mc.png" alt="" title="" ></td>
+        <td><img src="gfx/Screenshot_YaDiV_seg_vis_tex.png" alt="" title="" ></td>
+      </tr>
+      <tr>
+        <td align="center">
+          <font size="2">Point Cloud</font>
+        </td>
+        <td align="center">
+          <font size="2">Marching Cube</font>
+        </td>
+        <td align="center">
+          <font size="2">Texture</font>
+        </td>
+      </tr>
+    </table>
+    
+    <p>
+    Currently four different segment visualization methods can be choosen. 
+    </p>
+    
+    <ul>
+      <li>
+        <b>Point Cloud</b><br>
+        The easiest way to visualize the segment is to draw a cluster of 3D
+        points. This is a very fast segment visualization and can be used to
+        validate the interactive segmentation process.
+      </li>
+      <li>
+        <b>Marching Cube</b><br>
+        A second approach to visualize a segment is to approximate its surface.
+        A fast and quite common method to do this is the Marching Cube
+        algorithm.
+      </li>
+      <li>
+        <b>Texture2d / 3d</b><br>
+        When 2D-/3d-Texture Volume Rendering is enabled, the texture cubus can
+        also show the segment color at the segmented voxels.
+      </li>
+    </ul>
+
+    <p>
+    <img src="gfx/Screenshot_YaDiV_tool_pane_view3d.png" alt="" title="" >
+    </p>
+    
+    <p>
+    The 3D segment visualization methods can be set for each individual segment.
+    This can be done in the "view 3d" tool pane. 
+    </p>
+
+    <p>
+    <b>Experts Tip:</b> The SegRenderer Settings allow to set much more options,
+    e.g. the marching cube smoothing quality or the point distance.
+    </p>
+
+    <h2>Volume Raycasting</h2>
+
+    <p>
+    The Volume Raycasting Module produces high quality pictures, looking much
+    nicer than any "View 3d" visualization.
+    It is work in progress and already quite stable but not all features
+    are fully functional yet. Since almost all
+    GUI elements will change until the final
+    release, no help is available yet.
+    </p>
+    
+    <table>
+      <tr>
+        <td>
+          <a href="gfx/raycasting_teaser_1_orig.jpg"><img border="0"
+            src="gfx/raycasting_teaser_1_small.jpg" alt="" title="" ></a>
+        </td>
+        <td>
+          <a href="gfx/raycasting_teaser_2_orig.jpg"><img border="0"
+            src="gfx/raycasting_teaser_2_small.jpg" alt="" title="" ></a>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" align="center">
+          <font size="2">Ray Casting Teaser</font>
+        </td>
+      </tr>
+    </table>
+
+    <h2>Haptic Interaction</h2>
+
+    <p>
+    Haptic Interaction has been removed for the closed source releases.
+    </p>
+
+    <h2>DICOM Analysis</h2>
+    <p>
+    If you are interested in the internal structure of your DICOM files,
+    select <b>"Misc &rarr; DICOM Info"</b> to find detailed information
+    about the DataElements in the loaded series.
+    </p>
+
+    <h2>Trouble Shooting</h2>
+    <p>
+    YaDiV is still in develeopement and not stable yet. If you experience
+    crashes or unexpected behaviour, please let us know. We are especially
+    interested in (anonomized!) DICOM files that are not displayed
+    correctly or can not be loaded at all.
+    </p>
+
+    <h2>About</h2>
+    <p>
+    YaDiV - Yet Another DICOM Viewer<br>
+    &copy; and written by Karl-Ingo Friese,
+    Leibniz Universit&auml;t Hannover, Welfenlab<br>
+    </p>  
+
+    <h1>Next Steps</h1>
+    <p>
+    After a closed-source phase to get some more user feedback,
+    YaDiV will be published as an open source project in the next months.
+    </p>
+    
+    <h2>Thanks!</h2>
+    <p>  
+    <b>The following people helped to bring YaDiV to its
+    current state:</b><br>
+		Benjamin Berger,
+		Philipp Blanke,
+		Richard Guercke,
+		Robert Meyer,
+		Maximilian M&uuml;ller,
+		Dominik Sarnow,
+		Bj&ouml;rn Scheuermann,
+		Marc Christoph Vollmer,
+		Johannes Wahle and
+		Yifan Yu
+    </p>  
+
+  </body>
+</html>

@@ -1,0 +1,16 @@
+<settings>
+
+<component name="main.seggen.dm.common.abortCriteria.FixedAborter" enabled="true">version:1;rate:0.995;min_movement:0.001;start_after_step:100;history_length:5</component>
+<component name="main.seggen.dm.common.abortCriteria.StepAborter" enabled="true">version:1;max_step:500</component>
+<component name="main.seggen.dm.common.forces.BulkGrowingForce" enabled="true">version:1;scale:0.3</component>
+<component name="main.seggen.dm.common.forces.LaPlaceShapePreservation" enabled="true">version:1;scale:0.3;radius:1</component>
+<component name="main.seggen.dm.common.forces.RecursiveCenterGradientImageForce" enabled="true">version:1;scale:0.3;delta_min:2;delta_max:0;min_grad:20;max_grad:40</component>
+<component name="main.seggen.dm.magnets.MagnetForce" enabled="true">version:1</component>
+<component name="main.seggen.dm.common.notifications.CSVStatistics" enabled="true">version:1;filename:results/stats.csv</component>
+<component name="main.seggen.dm.common.notifications.StepTimeMeasurer" enabled="true">version:1</component>
+<component name="main.seggen.dm.common.surfaceAdjuster.TooBigTriaAdjuster" enabled="false">version:1;max_area:20</component>
+<component name="main.seggen.dm.common.surfaceAdjuster.TooLongEdgeAdjuster" enabled="true">version:1;max_length:4;fast:false</component>
+<component name="main.seggen.dm.common.surfaceAdjuster.TooShortEdgeAdjuster" enabled="true">version:1;min_length:2;fast:false</component>
+
+
+</settings>

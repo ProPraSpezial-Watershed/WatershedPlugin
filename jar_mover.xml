@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Compiles and packages the plugin -->
+<project name="YaDiV" default="copy">
+	<description>
+		creates a jar from all files in bin and copies it into ../YaDiV/plugins
+	</description>
+		
+	<property name="plugin_name" value="ypProPra2016"/>
+	
+	<target name="copy">
+		<jar destfile="resources/plugins/${plugin_name}.jar" basedir="bin" />
+	</target>
+
+</project>
