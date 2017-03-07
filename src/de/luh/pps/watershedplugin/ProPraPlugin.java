@@ -12,9 +12,13 @@ import yplugins.YPlugin;
 
 @PluginImplementation
 public class ProPraPlugin implements YPlugin,YObserver {
+	
+	private WatershedModule module;
+	
 	@Init
 	public void init() {
-		MasterControl.register_module(new TestSegmentationModule(), YModuleType.SEGMENTING);		
+		module=new WatershedModule();
+		MasterControl.register_module(module, YModuleType.SEGMENTING);		
 		MasterControl.get_is().addObserver(this, "ProPraPlugin wants to know when GUI is ready");
 		
 		System.out.println(get_plugin_name()+" initialized");
@@ -22,7 +26,7 @@ public class ProPraPlugin implements YPlugin,YObserver {
 	
 	@Override
 	public String get_plugin_name() {
-		return "ProPra 2016 Plugin";
+		return "ProPra 2017 Plugin";
 	}
 
 	@Override
