@@ -8,8 +8,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import de.luh.pps.watershedplugin.watershed.ImmersionThread;
+import de.luh.pps.watershedplugin.watershed.WatershedThread;
 import main.ImageStack;
 import main.MasterControl;
+import main.Segment;
 import main.tools.ToolSegGen;
 import misc.messages.Message;
 import misc.messages.YObservable;
@@ -25,7 +27,14 @@ public class TemporaryGUI implements YObserver{
 	
 	private int currentSegment=0,numSegments=1;
 	
+	private int[] segments;
+	
+	private WatershedThread thread;
+	
+	private Segment seg;
+	
 	public TemporaryGUI(){
+		seg=MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME);
 		panel.setLayout(new FlowLayout());
 		
 		generate=new JButton("Generate");
@@ -36,24 +45,33 @@ public class TemporaryGUI implements YObserver{
 		
 		generate.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				ImmersionThread thread=new ImmersionThread(MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME),true);
+				thread=new ImmersionThread(MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME),true);
 				thread.start();
+				segments=null;
 			}
 		});
 		nextSegment.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
+				if(segments==null)
+					segments=thread.getSortedList();
 				currentSegment++;
-				if(currentSegment>=numSegments)
+				if(currentSegment>=thread.countSegments())
 					currentSegment=0;
-				segmentLabel.setText(currentSegment+"/"+numSegments);
+				seg.set_bc(thread.getSegment(segments[currentSegment]));
+				seg.new_data(true);
+				segmentLabel.setText(currentSegment+"/"+thread.countSegments());
 			}
 		});
 		prevSegment.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
+				if(segments==null)
+					segments=thread.getSortedList();
 				currentSegment--;
 				if(currentSegment<0)
-					currentSegment=numSegments-1;
-				segmentLabel.setText(currentSegment+"/"+numSegments);
+					currentSegment=thread.countSegments()-1;
+				seg.set_bc(thread.getSegment(segments[currentSegment]));
+				seg.new_data(true);
+				segmentLabel.setText(currentSegment+"/"+thread.countSegments());
 			}
 		});
 		
@@ -65,11 +83,6 @@ public class TemporaryGUI implements YObserver{
 	
 	public JPanel getPanel(){
 		return panel;
-	}
-
-	public void setNumSegments(int numSegments){
-		this.numSegments=numSegments;
-		segmentLabel.setText(currentSegment+"/"+numSegments);
 	}
 
 	@Override
