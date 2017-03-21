@@ -32,6 +32,10 @@ public class TestSegmentationModule extends GMPanel implements YModule, YObserve
 	
 	//The "Generate" Start button
 	private JButton Start;
+	//The next button
+	private JButton next;
+	//The previous button
+	private JButton previous;
 	//Textfield for min Value
 	private JFormattedTextField min;
 	//Textfield for maxvalue
@@ -115,6 +119,22 @@ public class TestSegmentationModule extends GMPanel implements YModule, YObserve
 				my_thread.start();
 			}
 		});
+		//next Generate Button 
+	    this.next = new JButton("Next Segment");
+	    this.next.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				//Do Something
+			}
+		});
+        //prev Generate Button 
+	    this.previous = new JButton("Prev Segment");
+	    this.previous.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				//Do SOmething
+			}
+		});
+	 
+	    
 		
 		//Create a Load button for data not nice but i search for a better solution
 		JButton load = new JButton("Load HP");
@@ -185,7 +205,7 @@ public class TestSegmentationModule extends GMPanel implements YModule, YObserve
 			 public void stateChanged(ChangeEvent e)
 		      {
 				//get new Value, histopanel highlight and textfields new 
-		       minLevel=slider.getLowValue();
+		        minLevel=slider.getLowValue();
 		        maxLevel=slider.getHighValue();
 		        
 		        min.setText(minLevel+"");
@@ -200,6 +220,8 @@ public class TestSegmentationModule extends GMPanel implements YModule, YObserve
 		add("hp",hpPanel);
 		add("slider",this.slider);
 		add("load",load);
+		add("next",this.next);
+		add("prev", this.previous);
 		//Set layout
 		set_layout(
 			      "<table width='100%' height='100%' cellpadding='0' border='0'>  <tr height='97%'> "
@@ -209,7 +231,8 @@ public class TestSegmentationModule extends GMPanel implements YModule, YObserve
 			      + "    <table width='100%' cellpadding='0' cellspacing='0' margin='0' border='0'>     "
 			      + "  <tr>         <td width='1%' anchor='west'>::min::</td>   "
 			      + "      <td width='1%' anchor='west'>Min</td>    "
-			      + "    <td width='100%' anchor='center'></td>           "
+			      //+ "    <td width='100%' anchor='center'></td>           "
+			      + " <td anchor='east'>::next::</td><td anchor='west'>::prev::</td> " 
 			      + "   <td width='1%' anchor='east'>Max</td>    "
 			      + "     <td width='1%' anchor='east'>::max::</td>   "
 			      + "    </tr>     </table>   </td>  </tr><tr height='1%'>  "
