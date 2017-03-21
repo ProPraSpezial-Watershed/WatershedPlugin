@@ -1,11 +1,19 @@
 package de.luh.pps.watershedplugin;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
 
 import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
-
+import javax.swing.border.EmptyBorder;
+ import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import gui.HistoPanel;
+import gui.JRangeSlider;
 import jgridmaker.GMPanel;
 import main.ImageStack;
 import main.MasterControl;
@@ -21,6 +29,16 @@ import threads.SegmentingThread;
 import yplugins.YModule;
 
 public class TestSegmentationModule extends GMPanel implements YModule, YObserver {
+	private JButton Start;
+	private JFormattedTextField min;
+	private JFormattedTextField max;
+	private JRangeSlider slider;
+	private HistoPanel hp;
+	//Selected High and Toplevel from User
+	private int maxLevel;
+	private int minLevel;
+	private boolean first=true;
+	
 	
 	private class SampleSegThread extends SegmentingThread {
 		public SampleSegThread(Segment seg, boolean monitor) {
@@ -77,27 +95,125 @@ public class TestSegmentationModule extends GMPanel implements YModule, YObserve
 	}
 	
 	public TestSegmentationModule() {
-		JButton jb_do_it = new JButton("Do it!");
-		jb_do_it.addActionListener(new ActionListener() {
+		
+		this.Start = new JButton("Do it!");
+		this.Start.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				Segment tmp_seg = MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME);
 				SampleSegThread my_thread = new SampleSegThread(tmp_seg, true);
 				my_thread.start();
 			}
 		});
-
-		add("do_it", jb_do_it);
 		
-		set_layout(""+
+		JButton load = new JButton("Load HP");
+		 load.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				int i = 1;
+				if(first){
+					i=3;
+					first = false;
+				}
+				for(int j = 0;j<i;j++){
+					ImageStack is = MasterControl.get_is();
+					if(is.get_state()==2){
+						minLevel =is.get_vch().get_nonzero_min();
+						maxLevel =is.get_vch().get_nonzero_max();
+						slider.setMinimum(minLevel);
+						slider.setMaximum(maxLevel);
+						slider.setRange(minLevel , maxLevel );					
+						min.setText(is.get_raw_value(minLevel)+"");
+						max.setText(is.get_raw_value(maxLevel)+"");
+					}
+				 
+				}
+				
+				
+			}
+		});
+
+		add("do_it", this.Start);
+		
+		/*set_layout(""+
 			"<table>"+
 			  "<tr>"+
 			    "<td>A simple Button:</td>"+
 			    "<td>::do_it::</td>"+
 			  "</tr>"+
-			"</table>");				
+			"</table>");*/				
 
 		ImageStack is = MasterControl.get_is();
+		
 		is.addObserver(this, "Test Module Listener");
+		this.min = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		this.min.setColumns(8);
+		this.min.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				int minTemp = Integer.parseInt(min.getText());
+				minLevel=minTemp;
+				slider.setRange(minLevel,maxLevel);
+				hp.highlight_interval(minLevel, maxLevel, new Color(255, 0, 0, 80));
+			}
+		});
+		
+		this.max = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		this.max.setColumns(8);
+		this.max.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				int maxTemp = Integer.parseInt(max.getText());
+				maxLevel=maxTemp;
+				slider.setRange(minLevel,maxLevel);
+				hp.highlight_interval(minLevel, maxLevel, new Color(255, 0, 0, 80));
+			}
+		});
+	
+		this.hp=new HistoPanel(is.get_vch(),"HPTest",false,false);
+		JPanel hpPanel = new JPanel();
+		hpPanel.setBorder(new EmptyBorder(0,16,0,16));;
+		hpPanel.setLayout(new BorderLayout());
+		hpPanel.add(this.hp, "Center");
+		this.slider = new JRangeSlider(0,1000,100,300,1);
+		this.slider.addChangeListener(new ChangeListener(){
+			 public void stateChanged(ChangeEvent e)
+		      {
+		       minLevel=slider.getLowValue();
+		        maxLevel=slider.getHighValue();
+		        
+		        min.setText(minLevel+"");
+				max.setText(maxLevel+"");
+				hp.highlight_interval(minLevel, maxLevel, new Color(255, 0, 0, 80));
+		      }
+		});
+		
+		add("min",this.min);
+		add("max",this.max);
+		add("hp",hpPanel);
+		add("slider",this.slider);
+		add("load",load);
+		set_layout(
+			      "<table width='100%' height='100%' cellpadding='0' border='0'>  <tr height='97%'> "
+			      + "   <td fill='both'>::hp::</td>  </tr><tr height='6%'> "
+			      + "   <td fill='horizontal'>::slider::</td>  </tr><tr height='1%'>  "
+			      + "  <td fill='horizontal'> "
+			      + "    <table width='100%' cellpadding='0' cellspacing='0' margin='0' border='0'>     "
+			      + "  <tr>         <td width='1%' anchor='west'>::min::</td>   "
+			      + "      <td width='1%' anchor='west'>Min</td>    "
+			      + "    <td width='100%' anchor='center'></td>           "
+			      + "   <td width='1%' anchor='east'>Max</td>    "
+			      + "     <td width='1%' anchor='east'>::max::</td>   "
+			      + "    </tr>     </table>   </td>  </tr><tr height='1%'>  "
+			      + "  <td fill='horizontal'>      <table width='100%' cellpadding='0' cellspacing='0' margin='0' border='0'>  "
+			      + "      <tr>            "
+			      + "        <td width='98%' >            <table cellpadding='0' cellspacing='0' margin='0'>   "
+			      + "           <tr>                <td>::do_it::</td>  <td>::load::</td>                "
+			      + "             </tr>            </table>          </td> "
+			      + "        "
+			      + "        </tr>      </table>    </td>  </tr></table>");
+			    
+		
+		
+		
+		//SegGenRangeGui
+		
 	}
 	
 	@Override
