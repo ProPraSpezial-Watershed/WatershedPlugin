@@ -45,7 +45,11 @@ public class ImmersionThread extends WatershedThread{
 	}
 
 	public ImmersionThread(Segment seg, boolean monitor,WatershedQuantizer range) {
-		this(seg,monitor,range,0.2);
+		this(seg,monitor,range,0.15);
+	}
+	
+	public ImmersionThread(Segment seg,boolean monitor,int min,int max,int interval,double relativeDynamic){
+		this(seg,monitor,new WatershedQuantizer(min,max,interval),relativeDynamic);
 	}
 	
 	public ImmersionThread(Segment seg, boolean monitor,WatershedQuantizer range,double relativeDynamic){
@@ -68,8 +72,8 @@ public class ImmersionThread extends WatershedThread{
 			imageStack[i]=(short) regGrid.get(i);
 		imageStack=getQuantizer().apply(imageStack);
 		
-		HMinTransform hMin=new HMinTransform(absoluteDynamic,dimX,dimY,dimZ);
-		imageStack=hMin.apply(imageStack);
+		/*HMinTransform hMin=new HMinTransform(absoluteDynamic,dimX,dimY,dimZ);
+		imageStack=hMin.apply(imageStack);*/
 	}
 	
 	/**
@@ -93,7 +97,6 @@ public class ImmersionThread extends WatershedThread{
 		int sum=0;
 		for(int i=0;i<rangeOffsets.length;i++){
 			rangeOffsets[i]=sum;
-			System.out.println(rangeOffsets[i]);
 			sum+=frequencies[i];
 		}
 		
@@ -278,7 +281,6 @@ public class ImmersionThread extends WatershedThread{
 				}
 				progress++;
 			}
-			set_progress_val(i);
 		}
 		
 		//Free memory. These array are LARGE!
