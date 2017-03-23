@@ -11,9 +11,14 @@ import misc.grid.RegularGrid3i;
 public class ImmersionThread extends WatershedThread{
 	
 	private static final short WATERSHED=(short) SKIZ_SEGMENT,
+								UNPROCESSED=0,
 								MASK=-2,
 								EDGE=-3,
 								FICTICOUS=-4;
+	
+	private int length;
+	
+	private short[] imageStack;
 	
 	private int[] sortedData;
 	
@@ -29,59 +34,65 @@ public class ImmersionThread extends WatershedThread{
 	
 	private int dimX,dimY,dimZ;
 	
+	private int absoluteDynamic;
+	
 	private int numSegments=0;
 	
 	private int[] neighbours;
 	
 	public ImmersionThread(Segment seg, boolean monitor){
-		this(seg, monitor, new WatershedQuantizer());
+		this(seg, monitor, new WatershedQuantizer(),0.15);
 	}
 
 	public ImmersionThread(Segment seg, boolean monitor,WatershedQuantizer range) {
+		this(seg,monitor,range,0.2);
+	}
+	
+	public ImmersionThread(Segment seg, boolean monitor,WatershedQuantizer range,double relativeDynamic){
 		super(seg, monitor,range);
 		neighbours=new int[3*3*3];
+		absoluteDynamic=(int) (range.getRange()*relativeDynamic);
+		
+		ImageStack imageStack = MasterControl.get_is();
+		regGrid = (RegularGrid3i)(imageStack.get_voxel_cube());
+
+		length=regGrid.get_number_of_voxels();
+		dimX=regGrid.get_dim_x();
+		dimY=regGrid.get_dim_y();
+		dimZ=regGrid.get_dim_z();
+	}
+	
+	private void preTransform(){
+		imageStack=new short[length];
+		imageStack=getQuantizer().apply(imageStack);
+		
+		HMinTransform hMin=new HMinTransform(absoluteDynamic,dimX,dimY,dimZ);
+		imageStack=hMin.apply(imageStack);
 	}
 	
 	/**
 	 * Initialize the transform.
 	 */
 	private void init(){
-		ImageStack imageStack = MasterControl.get_is();
-		regGrid = (RegularGrid3i)(imageStack.get_voxel_cube());
-
-		int length=regGrid.get_number_of_voxels();
 		sortedData=new int[length];
 		segmentData=new int[length];
 		distanceData=new int[length];
-		dimX=regGrid.get_dim_x();
-		dimY=regGrid.get_dim_y();
-		dimZ=regGrid.get_dim_z();
-
-		WatershedQuantizer range=getQuantizer();
-		int[] histo=imageStack.get_vch().get_histo();
-		rangeOffsets=new int[range.getRange()];
-		
-		for(int i=0;i<histo.length;i++){
-			rangeOffsets[range.transformValue(i)]+=histo[i];
-		}
-		int sum=0,temp=0;
-		for(int i=0;i<rangeOffsets.length;i++){
-			temp=rangeOffsets[i];
-			rangeOffsets[i]=sum;
-			sum+=temp;
-		}
-		//numSegments=rangeOffsets.length;
-		
-		/*for(int i=0;i<rangeOffsets.length;i++){
-			System.out.println(i+"="+rangeOffsets[i]);
-		}*/
 	}
 	
 	/**
-	 * Do the presorting. This is basically a counting sort where the counting is already done by the VoxelCubeHistogram.
+	 * Do the presorting. This is a counting sort.
 	 */
 	private void sort(){
-		int length=regGrid.get_number_of_voxels();
+		rangeOffsets=new int[getQuantizer().getRange()];
+		int[] frequencies=new int[getQuantizer().getRange()];
+		for(int i=0;i<length;i++){
+			frequencies[imageStack[i]]++;
+		}
+		int sum=0;
+		for(int i=0;i<rangeOffsets.length;i++){
+			rangeOffsets[i]=sum;
+			sum+=frequencies[i];
+		}
 		
 		int[] rangeIndices=new int[rangeOffsets.length];
 		int value=0;
@@ -112,7 +123,7 @@ public class ImmersionThread extends WatershedThread{
 	 * Pixels that are out of bounds are labeles with EDGE.
 	 * @param index
 	 */
-	private void readNeighbours(int index){
+	private void readNeighbourIndices(int index){
 		int x=index % dimX % dimY;
 		int y=(index/dimX) % dimY;
 		int z=index/dimX/dimY;
@@ -140,6 +151,9 @@ public class ImmersionThread extends WatershedThread{
 	public void my_run() {
 		WatershedQuantizer range=getQuantizer();
 		long progress=0;
+		
+		set_progress_label("Pretransforming...");
+		preTransform();
 
 		set_progress_label("Initializing...");
 		init();
@@ -168,11 +182,12 @@ public class ImmersionThread extends WatershedThread{
 					set_progress_val((int) (progress>>10));
 				
 				segmentData[sortedData[j]]=MASK;
-				readNeighbours(sortedData[j]);
+				
+				readNeighbourIndices(sortedData[j]);
 				
 				for(int k=0;k<neighbours.length;k++){
 					//Only use neighbours that are on the same level or lower
-					if(neighbours[k]==EDGE || range.transformValue(regGrid.get(neighbours[k]))>i)
+					if(neighbours[k]==EDGE || imageStack[neighbours[k]]>i)
 						continue;
 					
 					//Check wether the current pixel will be affected by the next step (IZ)
@@ -203,9 +218,9 @@ public class ImmersionThread extends WatershedThread{
 					}
 				}
 				
-				readNeighbours(pixel);
+				readNeighbourIndices(pixel);
 				for(int j=0;j<neighbours.length;j++){
-					if(neighbours[j]==EDGE || range.transformValue(regGrid.get(neighbours[j]))>i)
+					if(neighbours[j]==EDGE || imageStack[neighbours[j]]>i)
 						continue;
 					
 					//These neighbours are already processed...
@@ -214,13 +229,14 @@ public class ImmersionThread extends WatershedThread{
 						
 						//Is there a labeled neighbour?
 						if(segmentData[neighbours[j]]>0){
-							if(segmentData[pixel]==MASK || segmentData[pixel]==WATERSHED)
+							if(segmentData[pixel]==MASK || segmentData[pixel]==UNPROCESSED || segmentData[pixel]==WATERSHED)
 								segmentData[pixel]=segmentData[neighbours[j]];	//Extends the catchment basin into this pixel.
 							else if(segmentData[pixel]!=segmentData[neighbours[j]])
 								segmentData[pixel]=WATERSHED;	//Two pixels with the same distance from a minimum are a WATERSHED pixel by definition
 						}else if(segmentData[pixel]==MASK)	//If there is no labeled neighbour, this pixel is part of the SKIZ
 							segmentData[pixel]=WATERSHED;
-					}else if(segmentData[neighbours[j]]==MASK && distanceData[neighbours[j]]==0){	//... and these neighbours will be in the next iteration
+					}else if((segmentData[neighbours[j]]==MASK || segmentData[pixel]==UNPROCESSED) && distanceData[neighbours[j]]==0){
+						//... and these neighbours will be in the next iteration
 						//Prepare pixel just like before.
 						distanceData[neighbours[j]]=distance+1;
 						queue.enqueue(neighbours[j]);
@@ -243,14 +259,14 @@ public class ImmersionThread extends WatershedThread{
 					queue.enqueue(sortedData[j]);
 					while(!queue.isEmpty()){
 						int pixel=queue.dequeue();
-						readNeighbours(pixel);
+						readNeighbourIndices(pixel);
 						
 						for(int k=0;k<neighbours.length;k++){
 							//Only floodfill on our current level
-							if(neighbours[k]==EDGE || range.transformValue(regGrid.get(neighbours[k]))!=i)
+							if(neighbours[k]==EDGE || imageStack[neighbours[k]]>i)
 								continue;
 							
-							if(segmentData[neighbours[k]]==MASK){
+							if(segmentData[neighbours[k]]==MASK || segmentData[neighbours[k]]==UNPROCESSED){
 								segmentData[neighbours[k]]=(short) numSegments;
 								queue.enqueue(neighbours[k]);
 							}

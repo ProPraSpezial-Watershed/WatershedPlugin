@@ -89,4 +89,18 @@ public class WatershedQuantizer {
 		else
 			return (input-min)/interval;
 	}
+	
+	public short[] apply(short[] source){
+		short[] result=new short[source.length];
+		short range=(short) (getRange()-1);
+		for(int i=0;i<source.length;i++){
+			if(source[i]>max)
+				result[i]=range;
+			else if(source[i]<min)
+				result[i]=0;
+			else
+				result[i]=(short) ((source[i]-min)/interval);
+		}
+		return result;
+	}
 }
