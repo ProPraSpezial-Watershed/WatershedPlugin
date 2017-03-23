@@ -64,6 +64,8 @@ public class ImmersionThread extends WatershedThread{
 	
 	private void preTransform(){
 		imageStack=new short[length];
+		for(int i=0;i<length;i++)
+			imageStack[i]=(short) regGrid.get(i);
 		imageStack=getQuantizer().apply(imageStack);
 		
 		HMinTransform hMin=new HMinTransform(absoluteDynamic,dimX,dimY,dimZ);
@@ -91,6 +93,7 @@ public class ImmersionThread extends WatershedThread{
 		int sum=0;
 		for(int i=0;i<rangeOffsets.length;i++){
 			rangeOffsets[i]=sum;
+			System.out.println(rangeOffsets[i]);
 			sum+=frequencies[i];
 		}
 		

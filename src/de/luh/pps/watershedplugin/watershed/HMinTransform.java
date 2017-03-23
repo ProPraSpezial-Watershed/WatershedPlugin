@@ -76,7 +76,7 @@ public class HMinTransform {
 				if(current[neighbours[j]]<min)
 					min=current[neighbours[j]];
 			}
-			if(min>original[i] && min!=next[i]){
+			if(min>=original[i] && min!=next[i]){
 				next[i]=min;
 				erosionChanges++;
 			}
