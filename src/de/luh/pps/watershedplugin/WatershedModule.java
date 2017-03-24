@@ -5,10 +5,13 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
+import java.util.Hashtable;
 
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -28,6 +31,7 @@ import misc.grid.RegularGrid3i;
 import misc.messages.Message;
 import misc.messages.YObservable;
 import misc.messages.YObserver;
+import settings.JDoubleOptionTFSlider;
 import threads.SegmentingThread;
 import yplugins.YModule;
 
@@ -50,6 +54,10 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 	// Selected High and Toplevel from User
 	private int maxLevel;
 	private int minLevel;
+	// Slider for dynamic value within the algorithm
+	private JSlider jslider;
+	private JFormattedTextField value;
+	private double dynamicValue;
 	// Need actually
 	// TODO: TRY TO LOAD DATA WITHOUT USER TASK ...
 	private boolean first = true;
@@ -69,7 +77,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				Segment tmp_seg = MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME);
-				my_thread = new ImmersionThread(tmp_seg, true,minLevel,maxLevel,1,0.15 /* <- Put dynamic here*/);
+				my_thread = new ImmersionThread(tmp_seg, true,minLevel,maxLevel,1,dynamicValue /* <- Put dynamic here*/);
 				segments=null;
 				currentSegment=0;
 				my_thread.start();
@@ -191,7 +199,27 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 				hp.highlight_interval(minLevel, maxLevel, new Color(255, 0, 0, 80));
 			}
 		});
+		// Create Slider with value between 0 and 10,000 (or 0-1) with 0.15 as ini value
+		this.jslider = new JSlider(JSlider.HORIZONTAL,0,10000,1500);
+		 // Create change listener to update textfield
+		this.jslider.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent e){
+				//Get Real number we wont 
+				dynamicValue = jslider.getValue()/10000.0;
+				value.setText(dynamicValue+"");
+			}
+		});
+		// Create textfield to see the slider value
+		this.value =  new JFormattedTextField(NumberFormat.INTEGER_FIELD);
+		this.value.setColumns(8);
+		dynamicValue = this.jslider.getValue()/10000.0;
+		this.value.setText(dynamicValue+"");
 		
+		
+		
+		
+	 
 		// Add components
 		add("generate", this.Start);
 		add("min", this.min);
@@ -201,6 +229,8 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 		add("load", load);
 		add("next", this.next);
 		add("prev", this.previous);
+		add("jslider", this.jslider);
+		add("value", this.value);
 		
 		// Set layout
 		set_layout(
@@ -217,8 +247,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 				+ "   					<tr>																		"
 				+ "       		 			<td width='1%' anchor='west'>::min::</td>   							"
 				+ "        	     			<td width='1%' anchor='west'>Min</td>   								"
-				+ "       		 			<td anchor='east'>::next::</td>											"
-				+ "							<td anchor='west'>::prev::</td>											"
+				+ "							<td>::load::</td>           							    			"  
 				+ "       		 			<td width='1%' anchor='east'>Max</td>                                 	"
 				+ "       		 			<td width='1%' anchor='east'>::max::</td>  							   	"
 				+ "   					</tr> 																		"
@@ -228,19 +257,24 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 				+ "		<tr height='1%'> 																	    	"
 				+ "       	 <td fill='horizontal'> 																"
 				+ "     			<table width='100%' cellpadding='0' cellspacing='0' margin='0' border='0'>      "
-				+ "     				 <tr>           														    "
-				+ "        				<td width='98%' > 															"
-				+ "           				<table cellpadding='0' cellspacing='0' margin='0'>  					"
-				+ "           					<tr>              													"
-				+ "									<td>::generate::</td>											"
-				+ "									<td>::load::</td>           							    	"
-				+ "           					</tr>																"
-				+ "    						</table>  																"
-				+ "  					</td> 																		"
-				+ "					</tr> 																			"
+				+ "     				 <tr>         														        "	
+				+ "							<td colspan='3' fill='both'>::jslider::</td>							"
+				+ "							<td anchor='west' >::value::</td>	 							    	"          							
+				+ "							<td anchor='west'>::generate::</td>										"        					
+				+ "					    </tr> 																	    "
 				+ "				</table> 																			"
 				+ "			</td>																					"
 				+ "		</tr>																						"
+				+ "		<tr height='1%'> 																	    	"
+				+ "       	 <td fill='horizontal'> 																"
+				+ "     		<table width='100%' cellpadding='0' cellspacing='0' margin='0' border='0'>     	    "
+				+ "     			<tr>         														            "		 
+				+ "       		 		<td anchor='east'>::next::</td>												"
+				+ "						<td anchor='west'>::prev::</td>												"        					
+				+ "					</tr> 																	  	    "
+				+ "				</table> 																			"
+				+ "			</td>																					"
+				+ "		</tr>																						"					
 				+ "	</table>																						"
 				);
 
