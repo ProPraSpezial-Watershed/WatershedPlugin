@@ -52,4 +52,6 @@ public abstract class WatershedThread extends SegmentingThread {
 	 * Indices of larger segments are at the begining and smaller segments are at the end.
 	 */
 	public abstract int[] getSortedList();
+	
+	public abstract void free();
 }

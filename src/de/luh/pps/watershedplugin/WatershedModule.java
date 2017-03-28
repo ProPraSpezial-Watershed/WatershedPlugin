@@ -5,11 +5,9 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
-import java.util.Hashtable;
 
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.border.EmptyBorder;
@@ -27,12 +25,9 @@ import main.Segment;
 import main.VoxelCubeHistogram;
 import main.tools.ToolSegGen;
 import misc.grid.BitCube;
-import misc.grid.RegularGrid3i;
 import misc.messages.Message;
 import misc.messages.YObservable;
 import misc.messages.YObserver;
-import settings.JDoubleOptionTFSlider;
-import threads.SegmentingThread;
 import yplugins.YModule;
 
 public class WatershedModule extends GMPanel implements YModule, YObserver {
@@ -67,8 +62,11 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 	private int[] segments;
 	
 	private int currentSegment=0;
+	
+	private Segment selection;
 
 	public WatershedModule() {
+		selection=MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME);
 
 		// Ini Generate Button
 		this.Start = new JButton("Generate");
@@ -76,9 +74,13 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 		this.Start.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				Segment tmp_seg = MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME);
-				my_thread = new ImmersionThread(tmp_seg, true,minLevel,maxLevel,1,dynamicValue);
-				System.gc();
+				if(my_thread!=null){
+					my_thread=null;
+					selection.get_bc().clear();
+					selection.new_data(true);
+					System.gc();
+				}
+				my_thread = new ImmersionThread(selection, true,minLevel,maxLevel,1,dynamicValue);
 				segments=null;
 				currentSegment=0;
 				my_thread.start();
@@ -95,7 +97,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 						currentSegment=0;
 					
 					BitCube segmentData=my_thread.getSegment(segments[currentSegment]);
-					MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME).set_bc(segmentData);
+					selection.set_bc(segmentData);
 				}
 			}
 		});
@@ -110,7 +112,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 						currentSegment=segments.length-1;
 
 					BitCube segmentData=my_thread.getSegment(segments[currentSegment]);
-					MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME).set_bc(segmentData);
+					selection.set_bc(segmentData);
 				}
 			}
 		});
@@ -135,6 +137,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 					if (is.get_state() == 2) {
 						minLevel = is.get_vch().get_nonzero_min();
 						maxLevel = is.get_vch().get_nonzero_max();
+						System.out.println(minLevel+","+maxLevel);
 						slider.setMinimum(minLevel);
 						slider.setMaximum(maxLevel);
 						slider.setRange(minLevel, maxLevel);
@@ -149,6 +152,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 
 		ImageStack is = MasterControl.get_is();
 		is.addObserver(this, "Test Module Listener");
+		is.get_vch().addObserver(this,"Test Module Listener");
 		
 		// Create min Textfield and add a change listener for input
 		this.min = new JFormattedTextField(NumberFormat.getIntegerInstance());
@@ -207,19 +211,15 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 			@Override
 			public void stateChanged(ChangeEvent e){
 				//Get Real number we wont 
-				dynamicValue = jslider.getValue()/10000.0;
+				dynamicValue = jslider.getValue()/1000.0;	//Changed range to 0-10
 				value.setText(dynamicValue+"");
 			}
 		});
 		// Create textfield to see the slider value
 		this.value =  new JFormattedTextField(NumberFormat.INTEGER_FIELD);
 		this.value.setColumns(8);
-		dynamicValue = this.jslider.getValue()/10000.0;
+		dynamicValue = this.jslider.getValue()/1000.0;
 		this.value.setText(dynamicValue+"");
-		
-		
-		
-		
 	 
 		// Add components
 		add("generate", this.Start);
@@ -283,12 +283,12 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 
 	@Override
 	public String get_module_name() {
-		return "PPS16 Seg";
+		return "Watershed";
 	}
 
 	@Override
 	public String get_module_short_descr() {
-		return "A small sample Module to learn YPlugin programming";
+		return "Applies a gradient watershed transform";
 	}
 
 	@Override
@@ -300,7 +300,21 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 	public void update(YObservable sender, Message m) {
 		System.out.println("SampleSegModule::update received message from " + sender.getClass() + ": "
 				+ Message.get_message_string(m._type));
-
+		
+		if(sender.getClass()==VoxelCubeHistogram.class){
+			if(m._type==VoxelCubeHistogram.M_VCH_UPDATE){
+				ImageStack is = MasterControl.get_is();
+				minLevel = is.get_vch().get_nonzero_min();
+				maxLevel = is.get_vch().get_nonzero_max();
+				this.slider.setMinimum(minLevel);
+				this.slider.setMaximum(maxLevel);
+				this.slider.setRange(minLevel, maxLevel);
+				this.min.setText(is.get_raw_value(minLevel) + "");
+				this.max.setText(is.get_raw_value(maxLevel) + "");
+				
+				System.out.println(minLevel+"::"+maxLevel);
+			}
+		}
 		if (sender.getClass() == ImageStack.class) {
 			if (m._type == ImageStack.M_LOADING_END) {
 				System.out.println("TestModule received M_LOADING_END message");
