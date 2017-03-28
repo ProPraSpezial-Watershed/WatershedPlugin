@@ -355,10 +355,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserverWantsA
 				this.listPanel.add(listScroller );
 				listScroller.repaint();
 				this.listPanel.repaint();
-<<<<<<< HEAD
-				 
-=======
->>>>>>> origin/master
+ 
 			}
 		}
 	}
