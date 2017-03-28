@@ -2,17 +2,24 @@ package de.luh.pps.watershedplugin;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import de.luh.pps.watershedplugin.watershed.ImmersionThread;
 import de.luh.pps.watershedplugin.watershed.WatershedThread;
@@ -59,12 +66,16 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 	private JSlider jslider;
 	private JFormattedTextField value;
 	private double dynamicValue;
+	
+	private JList<String> segmentationList;
+	private JPanel listPanel;
 
 	private WatershedThread my_thread;
 
 	private int[] segments;
 
 	private int currentSegment = 0;
+	private DefaultListModel<String> model;
 
 	public WatershedModule() {
 		// Initiate Generate Button
@@ -79,6 +90,9 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 				segments = null;
 				currentSegment = 0;
 				my_thread.start();
+				 
+					
+				 
 			}
 		});
 		// next Generate Button
@@ -94,6 +108,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 
 					BitCube segmentData = my_thread.getSegment(segments[currentSegment]);
 					MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME).set_bc(segmentData);
+					segmentationList.setSelectedIndex(currentSegment);
 				}
 			}
 		});
@@ -120,6 +135,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 
 					BitCube segmentData = my_thread.getSegment(segments[currentSegment]);
 					MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME).set_bc(segmentData);
+					segmentationList.setSelectedIndex(currentSegment);
 				}
 			}
 		});
@@ -192,6 +208,32 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 		this.value.setColumns(8);
 		dynamicValue = this.jslider.getValue()/1000.0;
 		this.value.setText(dynamicValue+"");
+		
+		
+
+		// add listview component		
+		this.model = new DefaultListModel<String>();
+		this.segmentationList = new JList<String>(this.model);
+		this.segmentationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		this.segmentationList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		
+	   
+	    //this.segmentationList.setPreferredSize(null);
+	   
+		this.segmentationList.addListSelectionListener(new ListSelectionListener(){
+		 
+
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				currentSegment = segmentationList.getSelectedIndex();
+				BitCube segmentData =  my_thread.getSegment(segments[currentSegment]);
+				MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME).set_bc(segmentData);
+				
+			}
+		});
+		  this.listPanel = new JPanel();
+		this.listPanel.setLayout(new BorderLayout());
+		this.listPanel.add(this.segmentationList, "Center");
 		// Add components
 		add("generate", this.start);
 		add("fromseed",this.fromSeed);
@@ -203,6 +245,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 		add("prev", this.previous);
 		add("jslider", this.jslider);
 		add("value", this.value);
+		add("segList",this.listPanel);
 
 		// Set layout
 		set_layout(
@@ -219,7 +262,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 						+ "   				<tr>																			"
 						+ "       		 		<td width='1%' anchor='west'>::min::</td>   								"
 						+ "        	     		<td width='1%' anchor='west'>Min</td>   									"	
-						+ "        	     		<td width='100%'>::generate::</td>   							         		"	
+						+ "        	     		<td width='100%'>::generate::</td>   							         	"	
 						+ "       		 		<td width='1%' anchor='east'>Max</td>                                 		"
 						+ "       		 		<td width='1%' anchor='east'>::max::</td>  							   		"
 						+ "   				</tr> 																			"
@@ -233,12 +276,15 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 						+ "						<td colspan='3' fill='both'>::jslider::</td>								"
 						+ "						<td anchor='west' >::value::</td>	 							    		"
 						+ "       		 		<td anchor='east'>::prev::</td>												"
-						+ "						<td anchor='west'>::fromseed::</td>											"
-						+ "						<td anchor='east'>::next::</td>												"
+						+ "						<td anchor='west'>::next::</td>												"
+						+ "						<td anchor='west'>::fromseed::</td>											"						
 						+ "					</tr> 																	  	    "
 						+ "				</table> 																			"
 						+ "			</td>																					"
 						+ "		</tr>																						"
+						+ "     <tr>"
+						+"      <td fill='both'>::segList::</td>"
+						+"</tr>"
 						+ "	</table>																						");
 
 	}
@@ -280,7 +326,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 	public void update(YObservable sender, Message m) {
 		System.out.println("SampleSegModule::update received message from " + sender.getClass() + ": "
 				+ Message.get_message_string(m._type));
-		
+	 
 		if (sender.getClass() == ImageStack.class) {
 			if (m._type == ImageStack.M_LOADING_END) {
 				System.out.println("TestModule received M_LOADING_END message");
@@ -289,6 +335,26 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 
 			if (m._type == ImageStack.M_SEG_END) {
 				segments = my_thread.getSortedList();
+				for(int i = 0; i<segments.length;i++){
+					model.addElement("Segment: "+segments[i]);
+					
+				}
+				// not nice here need to clean up but so it do what it should do so 
+				// creates a list with the segmentation of the watershed algo
+				this.segmentationList.setMinimumSize(new Dimension(100,60));
+				this.segmentationList.setMaximumSize(new Dimension(100,60));
+				this.segmentationList.setSize(new Dimension(100,60));
+				JScrollPane listScroller = new JScrollPane(this.segmentationList);
+				listScroller.setMinimumSize(new Dimension(100,60));
+				listScroller.setMaximumSize(new Dimension(100,60));
+				listScroller.setSize(new Dimension(100,60));
+				listScroller.setPreferredSize(new Dimension(100,60));
+			    this.listPanel.removeAll();
+				this.listPanel.setLayout(new BorderLayout());
+				this.listPanel.add(listScroller );
+				listScroller.repaint();
+				this.listPanel.repaint();
+				
 			}
 
 		}
