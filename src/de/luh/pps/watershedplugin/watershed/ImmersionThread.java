@@ -395,12 +395,12 @@ public class ImmersionThread extends WatershedThread{
 	@Override
 	public BitCube getSegmentAt(int x, int y, int z) {
 		int index=x+y*dimX+z*dimX*dimY;
-		return getSegment(segmentData[index]);
+		return getSegment(segmentData[index]-1);
 	}
 
 	@Override
 	public BitCube getSegmentAt(int index) {
-		return getSegment(segmentData[index]);
+		return getSegment(segmentData[index]-1);
 	}
 
 	@Override
