@@ -335,10 +335,13 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 
 			if (m._type == ImageStack.M_SEG_END) {
 				segments = my_thread.getSortedList();
-				for(int i = 0; i<segments.length;i++){
-					model.addElement("Segment: "+segments[i]);
-					
-				}
+				 
+					for(int i = 0; i<segments.length;i++){
+						model.addElement("Segment: "+segments[i]);
+						
+					}
+				
+				
 				// not nice here need to clean up but so it do what it should do so 
 				// creates a list with the segmentation of the watershed algo
 				this.segmentationList.setMinimumSize(new Dimension(100,60));
@@ -354,7 +357,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 				this.listPanel.add(listScroller );
 				listScroller.repaint();
 				this.listPanel.repaint();
-				
+				 
 			}
 
 		}
