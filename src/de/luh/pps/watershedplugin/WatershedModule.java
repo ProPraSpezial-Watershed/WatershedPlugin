@@ -180,17 +180,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserverWantsA
 
 		// Create slider and add change listener
 		this.slider = new JRangeSlider(0, 1000, 100, 300, 1);
-		this.slider.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				// get new Value, histopanel highlight and textfields new
-				minLevel = slider.getLowValue();
-				maxLevel = slider.getHighValue();
-				min.setText(minLevel + "");
-				max.setText(maxLevel + "");
-				hp.highlight_interval(minLevel, maxLevel, new Color(255, 0, 0, 80));
-			}
-		});
+		
 		// Create Slider with value between 0 and 10,000 (or 0-1) with 0.15 as
 		// ini value
 		this.jslider = new JSlider(JSlider.HORIZONTAL, 0, 10000, 1500);
@@ -287,22 +277,33 @@ public class WatershedModule extends GMPanel implements YModule, YObserverWantsA
 
 	}
 	
-	private void updateUIFields(){
-		for (int j = 0; j < 3; j++) {
-			// load stack to set data
-			// need to do 3 times ? don't know at the moment
+	private void updateUIFields(){	
+		// Load HP min max sldier data
 			ImageStack is = MasterControl.get_is();
-			if (is.get_state() == 2) {
-				minLevel = is.get_vch().get_nonzero_min();
-				maxLevel = is.get_vch().get_nonzero_max();
-				slider.setMinimum(minLevel);
-				slider.setMaximum(maxLevel);
-				slider.setRange(minLevel, maxLevel);
-				min.setText(is.get_raw_value(minLevel) + "");
-				max.setText(is.get_raw_value(maxLevel) + "");
-			}
-
-		}
+			
+			 if (is.get_state() == ImageStack.STATE_LOADED) { 				  
+				this.minLevel = is.get_vch().get_nonzero_min();
+				System.out.println(this.minLevel);
+				this.maxLevel = is.get_vch().get_nonzero_max();
+				this.slider.setMinimum(this.minLevel);
+				this.slider.setMaximum(this.maxLevel);
+				this.slider.setRange(this.minLevel, this.maxLevel);
+				this.min.setText(this.minLevel + "");
+				this.max.setText(this.maxLevel + "");
+				this.hp.highlight_interval(this.minLevel, this.maxLevel, new Color(255, 0, 0, 80));
+				this.slider.addChangeListener(new ChangeListener() {
+					@Override
+					public void stateChanged(ChangeEvent e) {
+						// get new Value, histopanel highlight and textfields new
+						minLevel = slider.getLowValue();
+						maxLevel = slider.getHighValue();
+						min.setText(minLevel + "");
+						max.setText(maxLevel + "");
+						hp.highlight_interval(minLevel, maxLevel, new Color(255, 0, 0, 80));
+					}
+				});
+			 }
+	
 	}
 
 	@Override
@@ -324,14 +325,21 @@ public class WatershedModule extends GMPanel implements YModule, YObserverWantsA
 	public void update(YObservable sender, Message m) {
 		System.out.println("SampleSegModule::update received message from " + sender.getClass() + ": "
 				+ Message.get_message_string(m._type));
+		
 	 
 		if (sender.getClass() == ImageStack.class) {
+		
+				
+			
+			
 			if (m._type == ImageStack.M_LOADING_END) {
+				
 				System.out.println("TestModule received M_LOADING_END message");
 				updateUIFields();			
 			}
 
 			if (m._type == ImageStack.M_SEG_END) {
+			
 				segments = my_thread.getSortedList();
 				 
 					for(int i = 0; i<segments.length;i++){
