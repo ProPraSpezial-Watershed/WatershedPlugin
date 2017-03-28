@@ -34,10 +34,10 @@ import misc.Voxel;
 import misc.grid.BitCube;
 import misc.messages.Message;
 import misc.messages.YObservable;
-import misc.messages.YObserver;
+import misc.messages.YObserverWantsAWTThread;
 import yplugins.YModule;
 
-public class WatershedModule extends GMPanel implements YModule, YObserver {
+public class WatershedModule extends GMPanel implements YModule, YObserverWantsAWTThread {
 
 	/**
 	 * 
@@ -221,8 +221,6 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 	    //this.segmentationList.setPreferredSize(null);
 	   
 		this.segmentationList.addListSelectionListener(new ListSelectionListener(){
-		 
-
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				currentSegment = segmentationList.getSelectedIndex();
@@ -354,10 +352,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 				this.listPanel.add(listScroller );
 				listScroller.repaint();
 				this.listPanel.repaint();
-				
 			}
-
 		}
 	}
-
 }
