@@ -77,7 +77,8 @@ public class WatershedModule extends GMPanel implements YModule, YObserver {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				Segment tmp_seg = MasterControl.get_is().get_segment(ToolSegGen.TMP_SEG_NAME);
-				my_thread = new ImmersionThread(tmp_seg, true,minLevel,maxLevel,1,dynamicValue /* <- Put dynamic here*/);
+				my_thread = new ImmersionThread(tmp_seg, true,minLevel,maxLevel,1,dynamicValue);
+				System.gc();
 				segments=null;
 				currentSegment=0;
 				my_thread.start();

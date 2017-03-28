@@ -7,6 +7,11 @@ import main.MasterControl;
 import main.Segment;
 import misc.grid.BitCube;
 import misc.grid.RegularGrid3i;
+import misc.grid.VoxelCube;
+import misc.grid.gradients.GradientCachingMethod;
+import misc.grid.gradients.GradientFunction;
+import misc.grid.gradients.GradientFunctionFactory;
+import misc.grid.gradients.GradientFunctionType;
 
 public class ImmersionThread extends WatershedThread{
 	
@@ -33,12 +38,14 @@ public class ImmersionThread extends WatershedThread{
 	private RegularGrid3i regGrid;
 	
 	private int dimX,dimY,dimZ;
-	
-	private int absoluteDynamic;
+
+	private double relativeDynamic;
 	
 	private int numSegments=0;
 	
 	private int[] neighbours;
+	
+	public RegularGrid3i vc;
 	
 	public ImmersionThread(Segment seg, boolean monitor){
 		this(seg, monitor, new WatershedQuantizer(),0.15);
@@ -55,10 +62,11 @@ public class ImmersionThread extends WatershedThread{
 	public ImmersionThread(Segment seg, boolean monitor,WatershedQuantizer range,double relativeDynamic){
 		super(seg, monitor,range);
 		neighbours=new int[3*3*3];
-		absoluteDynamic=(int) (range.getRange()*relativeDynamic);
+		//absoluteDynamic=(int) (range.getRange()*relativeDynamic);
+		this.relativeDynamic=relativeDynamic/10;
 		
-		ImageStack imageStack = MasterControl.get_is();
-		regGrid = (RegularGrid3i)(imageStack.get_voxel_cube());
+		ImageStack is = MasterControl.get_is();
+		regGrid = (RegularGrid3i)(is.get_voxel_cube());
 
 		length=regGrid.get_number_of_voxels();
 		dimX=regGrid.get_dim_x();
@@ -67,13 +75,35 @@ public class ImmersionThread extends WatershedThread{
 	}
 	
 	private void preTransform(){
-		imageStack=new short[length];
+		WatershedQuantizer quantizer=getQuantizer();
+		VoxelCube vc=new VoxelCube(dimX,dimY,dimZ);
 		for(int i=0;i<length;i++)
-			imageStack[i]=(short) regGrid.get(i);
-		imageStack=getQuantizer().apply(imageStack);
-		
-		/*HMinTransform hMin=new HMinTransform(absoluteDynamic,dimX,dimY,dimZ);
-		imageStack=hMin.apply(imageStack);*/
+			vc.set(i, quantizer.transformValue(regGrid.get(i)));
+
+		imageStack=new short[length];
+		GradientFunction gradient=GradientFunctionFactory.get_gradient_function(vc,GradientFunctionType.CENTRAL_DIFFERENCES,
+																					GradientCachingMethod.ON_THE_FLY);
+		gradient.set_normalized(false);
+		System.out.println(gradient);
+		javax.vecmath.Vector3f vec=new javax.vecmath.Vector3f();
+		int range=getQuantizer().getRange();
+		for(int z=0;z<dimZ;z++){
+			for(int y=0;y<dimY;y++){
+				for(int x=0;x<dimX;x++){
+					if(x==0 || x==dimX-1 || y==0 || y==dimY-1 || z==0 || z==dimZ-1){
+						imageStack[x+y*dimX+z*dimX*dimY]=(short) (range-1);
+						continue;
+					}
+					gradient.gradient_at(x,y,z,vec);
+					double vecLength=vec.length();
+					if(vecLength>=relativeDynamic*range){
+						imageStack[x+y*dimX+z*dimX*dimY]=(short) vecLength;
+					}else
+						imageStack[x+y*dimX+z*dimX*dimY]=0;
+				}
+			}
+		}
+		System.gc();
 	}
 	
 	/**
@@ -102,17 +132,16 @@ public class ImmersionThread extends WatershedThread{
 		
 		int[] rangeIndices=new int[rangeOffsets.length];
 		int value=0;
-		WatershedQuantizer range=getQuantizer();
 		for(int i=0;i<length;i++){
-			value=range.transformValue(regGrid.get(i));
+			value=imageStack[i];
 			sortedData[rangeOffsets[value]+rangeIndices[value]]=i;
 			rangeIndices[value]++;
 		}
 		
 		/*boolean test=true;
-		int prev=range.transformValue(regGrid.get(sortedData[0]));
+		int prev=imageStack[sortedData[0]];
 		for(int i=1;i<length;i++){
-			value=range.transformValue(regGrid.get(sortedData[i]));
+			value=imageStack[sortedData[i]];
 			test&=value>=prev;
 			if(!test){
 				System.out.println("Error at "+i+":"+prev+","+value);
@@ -120,7 +149,8 @@ public class ImmersionThread extends WatershedThread{
 			}
 			prev=value;
 		}
-		System.out.println(test);*/
+		System.out.println(test);
+		*/
 		
 	}
 	
@@ -180,7 +210,7 @@ public class ImmersionThread extends WatershedThread{
 				length=rangeOffsets[i+1]-rangeOffsets[i];
 			start=rangeOffsets[i];
 			
-			ImmersionQueue queue=new ImmersionQueue();
+			ImmersionQueue queue=new ImmersionQueue(length);
 			
 			//Masking
 			for(int j=start;j<start+length;j++){
@@ -193,7 +223,7 @@ public class ImmersionThread extends WatershedThread{
 				
 				for(int k=0;k<neighbours.length;k++){
 					//Only use neighbours that are on the same level or lower
-					if(neighbours[k]==EDGE || imageStack[neighbours[k]]>i)
+					if(neighbours[k]==EDGE)
 						continue;
 					
 					//Check wether the current pixel will be affected by the next step (IZ)
@@ -215,7 +245,7 @@ public class ImmersionThread extends WatershedThread{
 				int pixel=queue.dequeue();
 				if(pixel==FICTICOUS){	//Are we at the boundary?
 					if(queue.isEmpty())
-						break;	//were done for this level
+						break;	//we are done for this level
 					else{
 						//More stuff after the boundary, increment distance.
 						distance++;
@@ -226,7 +256,7 @@ public class ImmersionThread extends WatershedThread{
 				
 				readNeighbourIndices(pixel);
 				for(int j=0;j<neighbours.length;j++){
-					if(neighbours[j]==EDGE || imageStack[neighbours[j]]>i)
+					if(neighbours[j]==EDGE)
 						continue;
 					
 					//These neighbours are already processed...
@@ -259,7 +289,7 @@ public class ImmersionThread extends WatershedThread{
 				distanceData[sortedData[j]]=0;
 				if(segmentData[sortedData[j]]==MASK){	//New minimum found!
 					numSegments++;	//Give it a name
-					segmentData[sortedData[j]]=(short) numSegments;
+					segmentData[sortedData[j]]=numSegments;
 					
 					//Floodfill minimum
 					queue.enqueue(sortedData[j]);
@@ -269,15 +299,16 @@ public class ImmersionThread extends WatershedThread{
 						
 						for(int k=0;k<neighbours.length;k++){
 							//Only floodfill on our current level
-							if(neighbours[k]==EDGE || imageStack[neighbours[k]]>i)
+							if(neighbours[k]==EDGE)
 								continue;
 							
-							if(segmentData[neighbours[k]]==MASK || segmentData[neighbours[k]]==UNPROCESSED){
-								segmentData[neighbours[k]]=(short) numSegments;
+							if(segmentData[neighbours[k]]==MASK){
+								segmentData[neighbours[k]]=numSegments;
 								queue.enqueue(neighbours[k]);
 							}
 						}
 					}
+					//System.out.println(numSegments);
 				}
 				progress++;
 			}
@@ -296,8 +327,10 @@ public class ImmersionThread extends WatershedThread{
 		for(int i=0;i<segmentData.length;i++){
 			if(segmentData[i]==WATERSHED)
 				continue;
-			else
+			else if(segmentData[i]>=1)
 				sortingData[segmentData[i]-1]+=0x10000;	//Store value as [segment Size][segment Index] in a long.
+			//else
+				//System.out.print(segmentData[i]+" ");
 		}
 		Arrays.sort(sortingData);
 		sortedSegments=new int[numSegments];
@@ -314,9 +347,16 @@ public class ImmersionThread extends WatershedThread{
 
 	@Override
 	public BitCube getSegment(int index) {
+		
 		if(index!=SKIZ_SEGMENT)
 			index++;
 		BitCube bitCube=new BitCube(_seg.get_bc(),false);
+		/*if(index==0){
+			for(int i=0;i<imageStack.length;i++){
+				if(regGrid.get(i)!=imageStack[i])
+			}
+			return bitCube;
+		}*/
 		for(int i=0;i<segmentData.length;i++){
 			if(segmentData[i]==index)
 				bitCube.set(i,1);

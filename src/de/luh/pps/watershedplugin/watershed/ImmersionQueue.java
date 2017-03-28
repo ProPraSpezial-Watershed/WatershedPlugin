@@ -10,6 +10,10 @@ class ImmersionQueue {
 		buffer=new int[256];
 	}
 	
+	public ImmersionQueue(int capacity){
+		buffer=new int[Math.max(10,capacity)];
+	}
+	
 	public void enqueue(int value){
 		buffer[head]=value;
 		head++;

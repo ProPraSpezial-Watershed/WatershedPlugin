@@ -4,23 +4,24 @@ public class HMinTransform {
 	
 	private final int EDGE=-1;
 	
-	private int dynamic;
+	private int dynamic,range;
 	
 	private short[] original;
 	
-	private short[] current,next,buffer1,buffer2;
+	private short[] elevated;
+	
+	private int[] sortedData,rangeOffsets;
 	
 	private int dimX,dimY,dimZ;
 	
 	private int[] neighbours;
 	
-	private int erosionChanges=-1;
-	
-	public HMinTransform(int dynamic,int dimX,int dimY,int dimZ){
+	public HMinTransform(int dynamic,int range,int dimX,int dimY,int dimZ){
 		if(dynamic<=0)
 			this.dynamic=1;
 		else
 			this.dynamic=dynamic;
+		this.range=range;
 		this.dimX=dimX;
 		this.dimY=dimY;
 		this.dimZ=dimZ;
@@ -51,58 +52,95 @@ public class HMinTransform {
 		}
 	}
 	
-	private void swapBuffers(){
-		if(current==buffer1){
-			current=buffer2;
-			next=buffer1;
-		}else{
-			current=buffer1;
-			next=buffer2;
+	private void sort(){
+		rangeOffsets=new int[range];
+		int[] frequencies=new int[range];
+		for(int i=0;i<elevated.length;i++){
+			frequencies[elevated[i]]++;
 		}
-	}
-	
-	private void erode(){
-		erosionChanges=0;
-		for(int i=0;i<current.length;i++){
-			if(current[i]==original[i])
-				continue;
-			readNeighbourIndices(i);
-			
-			short min=Short.MAX_VALUE;
-			for(int j=0;j<neighbours.length;j++){
-				if(neighbours[j]==EDGE)
-					continue;
-				
-				if(current[neighbours[j]]<min)
-					min=current[neighbours[j]];
-			}
-			if(min>=original[i] && min!=next[i]){
-				next[i]=min;
-				erosionChanges++;
-			}
+		int sum=0;
+		for(int i=0;i<rangeOffsets.length;i++){
+			rangeOffsets[i]=sum;
+			sum+=frequencies[i];
 		}
-		swapBuffers();
+		
+		int[] rangeIndices=new int[rangeOffsets.length];
+		int value=0;
+		for(int i=0;i<elevated.length;i++){
+			value=elevated[i];
+			sortedData[rangeOffsets[value]+rangeIndices[value]]=i;
+			rangeIndices[value]++;
+		}
+		
+		/*boolean test=true;
+		int prev=elevated[sortedData[0]];
+		for(int i=1;i<elevated.length;i++){
+			value=elevated[sortedData[i]];
+			test&=value>=prev;
+			if(!test){
+				System.out.println("Error at "+i+":"+prev+","+value);
+				break;
+			}
+			prev=value;
+		}
+		System.out.println(test);*/
+		
 	}
 	
 	public short[] apply(short[] source){
 		original=source;
-		buffer1=new short[source.length];
-		buffer2=new short[source.length];
-		current=buffer1;
-		next=buffer2;
+		elevated=new short[source.length];
+		sortedData=new int[source.length];
+		byte[] enqueued=new byte[source.length];
 		
-		for(int i=0;i<source.length;i++){
-			current[i]=(short) (source[i]+dynamic);
+		for(int i=0;i<elevated.length;i++){
+			elevated[i]=(short) (original[i]+dynamic);
+			if(elevated[i]>=range){
+				elevated[i]=(short) (range-1);
+			}
 		}
 		
-		while(erosionChanges!=0){
-			erode();
-			System.out.println(erosionChanges);
+		sort();
+		
+		for(int i=range-1;i>=dynamic;i--){
+			//Calculate offset and start of the data for this level.
+			int length,start;
+			if(i==range-1)	//Is this the last iteration?
+				length=elevated.length-rangeOffsets[i];
+			else
+				length=rangeOffsets[i+1]-rangeOffsets[i];
+			start=rangeOffsets[i];
+			ImmersionQueue queue=new ImmersionQueue(length);
+			
+			for(int j=start;j<start+length;j++){
+				queue.enqueue(sortedData[j]);
+			}
+
+			while(!queue.isEmpty()){
+				int pixel=queue.dequeue();
+				enqueued[pixel]=0;
+				short reference=elevated[pixel];
+				readNeighbourIndices(pixel);
+				
+				//if(pixel==2654336)
+				//	System.out.println("!");
+				for(int j=0;j<neighbours.length;j++){
+					if(neighbours[j]==EDGE)
+						continue;
+					if(elevated[neighbours[j]]<=reference)
+						continue;
+					if(elevated[neighbours[j]]<=original[neighbours[j]])
+						continue;
+					
+					elevated[neighbours[j]]=(short) Math.max(reference,original[neighbours[j]]);
+					if(enqueued[neighbours[j]]==0){
+						queue.enqueue(neighbours[j]);
+						enqueued[neighbours[j]]=1;
+					}
+				}
+			}
 		}
 		
-		next=null;
-		buffer1=null;
-		buffer2=null;
-		return current;
+		return elevated;
 	}
 }
