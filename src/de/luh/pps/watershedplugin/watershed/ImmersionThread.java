@@ -21,7 +21,7 @@ public class ImmersionThread extends WatershedThread{
 								EDGE=-3,
 								FICTICOUS=-4;
 	
-	private int length;
+	private int numVoxels;
 	
 	private short[] imageStack;
 	
@@ -63,9 +63,9 @@ public class ImmersionThread extends WatershedThread{
 		this.relativeDynamic=relativeDynamic/100;
 		
 		ImageStack is = MasterControl.get_is();
-		regGrid = (RegularGrid3i)(is.get_voxel_cube());
+		regGrid=is.get_voxel_cube();
 
-		length=regGrid.get_number_of_voxels();
+		numVoxels=regGrid.get_number_of_voxels();
 		dimX=regGrid.get_dim_x();
 		dimY=regGrid.get_dim_y();
 		dimZ=regGrid.get_dim_z();
@@ -74,11 +74,11 @@ public class ImmersionThread extends WatershedThread{
 	private void preTransform(){
 		WatershedQuantizer quantizer=getQuantizer();
 		VoxelCube vc=new VoxelCube(dimX,dimY,dimZ);
-		for(int i=0;i<length;i++)
+		for(int i=0;i<numVoxels;i++)
 			vc.set(i, quantizer.transformValue(regGrid.get(i)));
 
-		imageStack=new short[length];
-		GradientFunction gradient=GradientFunctionFactory.get_gradient_function(vc,GradientFunctionType.CENTRAL_DIFFERENCES,
+		imageStack=new short[numVoxels];
+		GradientFunction gradient=GradientFunctionFactory.create_gradient_function(vc,GradientFunctionType.CENTRAL_DIFFERENCES,
 																					GradientCachingMethod.ON_THE_FLY);
 		gradient.set_normalized(false);
 		javax.vecmath.Vector3f vec=new javax.vecmath.Vector3f();
@@ -105,9 +105,9 @@ public class ImmersionThread extends WatershedThread{
 	 * Initialize the transform.
 	 */
 	private void init(){
-		sortedData=new int[length];
-		segmentData=new int[length];
-		distanceData=new short[length];
+		sortedData=new int[numVoxels];
+		segmentData=new int[numVoxels];
+		distanceData=new short[numVoxels];
 	}
 	
 	/**
@@ -116,7 +116,7 @@ public class ImmersionThread extends WatershedThread{
 	private void sort(){
 		rangeOffsets=new int[getQuantizer().getRange()];
 		int[] frequencies=new int[getQuantizer().getRange()];
-		for(int i=0;i<length;i++){
+		for(int i=0;i<numVoxels;i++){
 			frequencies[imageStack[i]]++;
 		}
 		int sum=0;
@@ -127,7 +127,7 @@ public class ImmersionThread extends WatershedThread{
 		
 		int[] rangeIndices=new int[rangeOffsets.length];
 		int value=0;
-		for(int i=0;i<length;i++){
+		for(int i=0;i<numVoxels;i++){
 			value=imageStack[i];
 			sortedData[rangeOffsets[value]+rangeIndices[value]]=i;
 			rangeIndices[value]++;
@@ -185,6 +185,7 @@ public class ImmersionThread extends WatershedThread{
 		distanceData=null;
 		sortedSegments=null;
 		rangeOffsets=null;
+		regGrid=null;
 		System.gc();
 	}
 
@@ -221,17 +222,18 @@ public class ImmersionThread extends WatershedThread{
 			free();
 			return;
 		}
+		regGrid=null;
 		
 		System.gc();
 
-		set_progress_attributes("Immersing...",0,3*(regGrid.get_number_of_voxels()>>10),0);
+		set_progress_attributes("Immersing...",0,3*(numVoxels>>10),0);
 		//Run for each level
 		for(int i=0;i<range.getRange();i++){
 			
 			//Calculate offset and start of the data for this level.
 			int length,start;
 			if(i==rangeOffsets.length-1)	//Is this the last iteration?
-				length=regGrid.get_number_of_voxels()-rangeOffsets[i];
+				length=numVoxels-rangeOffsets[i];
 			else
 				length=rangeOffsets[i+1]-rangeOffsets[i];
 			start=rangeOffsets[i];
