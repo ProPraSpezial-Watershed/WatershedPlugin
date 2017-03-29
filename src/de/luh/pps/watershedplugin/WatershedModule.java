@@ -341,7 +341,7 @@ public class WatershedModule extends GMPanel implements YModule, YObserverWantsA
 			if (m._type == ImageStack.M_SEG_END) {
 			
 				segments = my_thread.getSortedList();
-				 
+				 model.clear();
 					for(int i = 0; i<segments.length;i++){
 						model.addElement("Segment: "+segments[i]);
 						
